@@ -99,3 +99,98 @@ func Benchmark_ReadPackedUInt32_Newer(b *testing.B) {
 
 	}
 }
+
+func TestWriteTag(t *testing.T) {
+	w := NewWriter()
+
+	w.writeValue(tagAndType(TagType(1), Fixed64))
+
+	if w.Pos != 1 {
+		t.FailNow()
+	}
+
+	e_k, e_t := byte(1), byte(1)
+	kk, tt := Key(w.Pbf[0])
+
+	if kk != e_k || tt != e_t {
+		t.Errorf("TestKey %b %b expected got %b %b", e_k, e_t, kk, tt)
+	}
+}
+
+func TestWriteFixed(t *testing.T) {
+	w := NewWriter()
+	w.writeFixed32(2)
+
+	if w.Pos != 4 {
+		t.FailNow()
+	}
+
+	w.writeFixed64(2)
+
+	if w.Pos != 12 {
+		t.FailNow()
+	}
+}
+
+func TestWriteVarint(t *testing.T) {
+	w := NewWriter()
+	w.writeValue(2)
+
+	if w.Pos != 1 {
+		t.FailNow()
+	}
+
+	w.writeValue(0x80)
+
+	if w.Pos != 3 {
+		t.FailNow()
+	}
+}
+
+func TestWritePacked(t *testing.T) {
+	w := NewWriter()
+	except := [4]uint64{0, 255, 4096, 25535}
+
+	w.WritePackedUInt64(TagType(1), except[:])
+
+	buf := w.Finish()
+
+	reader := NewReader(buf)
+
+	tag, v := reader.ReadTag()
+	if tag != TagType(1) || v != Bytes {
+		t.FailNow()
+	}
+	ty := reader.ReadPackedUInt64()
+
+	if len(ty) != len(except) {
+		t.FailNow()
+	}
+
+	for i := range ty {
+		if except[i] != ty[i] {
+			t.FailNow()
+		}
+	}
+}
+
+func TestWriteString(t *testing.T) {
+	w := NewWriter()
+	except := "test!!!"
+
+	w.WriteString(TagType(1), except)
+
+	buf := w.Finish()
+
+	reader := NewReader(buf)
+
+	tag, v := reader.ReadTag()
+	if tag != TagType(1) || v != Bytes {
+		t.FailNow()
+	}
+	ty := reader.ReadString()
+
+	if ty != except {
+		t.FailNow()
+	}
+}

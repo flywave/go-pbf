@@ -46,13 +46,14 @@ func (pbf *Writer) realloc(min int) int {
 	}
 
 	if i, ok := pbf.tryGrowByReslice(min); ok {
+		pbf.Length += min
 		return i
 	}
 
 	if pbf.Pbf == nil && min <= smallBufferSize {
 		pbf.Pbf = make([]byte, min, smallBufferSize)
 		pbf.Pos = 0
-		pbf.Length = 0
+		pbf.Length = min
 		return 0
 	}
 
@@ -184,7 +185,7 @@ func (pbf *Writer) makeRoomForExtraLength(startPos int, len int) {
 	}
 }
 
-func (pbf *Writer) WriteString(s string) {
+func (pbf *Writer) writeString(s string) {
 	pbf.realloc(len(s) * 4)
 
 	pbf.Pos++
@@ -201,6 +202,11 @@ func (pbf *Writer) WriteString(s string) {
 	buf := WriteValue(l)
 	i := startPos - 1
 	copy(pbf.Pbf[i:], buf)
+}
+
+func (pbf *Writer) WriteString(tag TagType, s string) {
+	pbf.WriteTag(tag, Bytes)
+	pbf.writeString(s)
 }
 
 func (pbf *Writer) writeRawMessage(fn func(w *Writer)) {

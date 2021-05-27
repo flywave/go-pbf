@@ -251,38 +251,43 @@ func (pbf *Reader) ReadPacked() []uint32 {
 
 func (pbf *Reader) ReadPackedInt32() []int32 {
 	size := pbf.ReadVarint()
-	arr := []int32{}
+	arr := make([]int32, size)
 	endpos := pbf.Pos + size
 
+	i := 0
 	for pbf.Pos < endpos {
-		arr = append(arr, int32(pbf.ReadUInt32()))
+		arr[i] = int32(pbf.ReadUInt32())
+		i++
 	}
 
-	return arr
+	return arr[:i]
 }
 
 func (pbf *Reader) ReadPackedInt64() []int64 {
 	size := pbf.ReadVarint()
-	arr := []int64{}
-	endpos := pbf.Pos + size
+	arr := make([]int64, size)
 
+	endpos := pbf.Pos + size
+	i := 0
 	for pbf.Pos < endpos {
-		arr = append(arr, int64(pbf.ReadVarint()))
+		arr[i] = int64(pbf.ReadVarint())
+		i++
 	}
 
-	return arr
+	return arr[:i]
 }
 
 func (pbf *Reader) ReadPackedUInt64() []uint64 {
 	size := pbf.ReadVarint()
-	arr := []uint64{}
+	arr := make([]uint64, size)
+
 	endpos := pbf.Pos + size
-
+	i := 0
 	for pbf.Pos < endpos {
-		arr = append(arr, uint64(pbf.ReadVarint()))
+		arr[i] = uint64(pbf.ReadVarint())
+		i++
 	}
-
-	return arr
+	return arr[:i]
 }
 
 func (pbf *Reader) ReadPackedUInt32() []uint32 {
