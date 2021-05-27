@@ -309,6 +309,13 @@ func (pbf *Writer) WritePackedFloat(tag TagType, p []float32) {
 	})
 }
 
+func (pbf *Writer) WriteRaw(buf []byte) {
+	n := len(buf)
+	i := pbf.realloc(n)
+	copy(pbf.Pbf[i:], buf)
+	pbf.Pos += n
+}
+
 func NewWriter() *Writer {
 	return &Writer{Pbf: nil, Length: 0}
 }
