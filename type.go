@@ -307,116 +307,6 @@ func AppendAll(b ...[]byte) []byte {
 	return totalbytes
 }
 
-func WritePackedUint32_2(geom []uint32) []byte {
-	buf := make([]byte, len(geom)*4+8)
-	pos := 8
-	for _, x := range geom {
-
-		for x > 127 {
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-		}
-		buf[pos] = uint8(x)
-		pos++
-	}
-	beg := EncodeVarint(uint64(pos - 8))
-	startpos := 8 - len(beg)
-	currentpos := startpos
-	i := 0
-	for currentpos < 8 {
-		buf[currentpos] = beg[i]
-		i++
-		currentpos++
-	}
-
-	return buf[startpos:pos]
-}
-
-func WritePackedUint32(geom []uint32) []byte {
-	buf := make([]byte, len(geom)*4+8)
-	pos := 8
-	for _, x := range geom {
-		if x < 128 {
-			buf[pos] = uint8(x)
-			x >>= 7
-			pos++
-		} else if x < 16384 {
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-			buf[pos] = uint8(x)
-			pos++
-		} else if x < 2097152 {
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-			buf[pos] = uint8(x)
-			pos++
-		} else {
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-			buf[pos] = uint8(x)
-			pos++
-		}
-	}
-	beg := EncodeVarint(uint64(pos - 8))
-	startpos := 8 - len(beg)
-	currentpos := startpos
-	i := 0
-	for currentpos < 8 {
-		buf[currentpos] = beg[i]
-		i++
-		currentpos++
-	}
-
-	return buf[startpos:pos]
-}
-
-func WritePackedUint32_3(geom []uint32) []byte {
-	count := 0
-	for _, x := range geom {
-		if x < 128 {
-			count += 1
-		} else if x < 16384 {
-			count += 2
-		} else if x < 2097152 {
-			count += 3
-		} else {
-			count += 4
-		}
-	}
-
-	beg := EncodeVarint(uint64(count))
-	buf := make([]byte, len(beg)+count)
-	for pos, i := range beg {
-		buf[pos] = i
-	}
-
-	pos := len(beg)
-	for _, x := range geom {
-
-		for x > 127 {
-			buf[pos] = 0x80 | uint8(x&0x7F)
-			x >>= 7
-			pos++
-		}
-		buf[pos] = uint8(x)
-		pos++
-	}
-	return buf
-}
-
 func EncodeVarint_Value(x uint64, typeint int) []byte {
 	var buf [maxVarintBytes]byte
 	var n int
@@ -426,8 +316,7 @@ func EncodeVarint_Value(x uint64, typeint int) []byte {
 	}
 	buf[n] = uint8(x)
 	n++
-	total := []byte{34, byte(n + 1), byte(typeint)}
-	return append(total, buf[0:n]...)
+	return buf[0:n]
 }
 
 func FloatVal32(f float32) []byte {
@@ -437,7 +326,7 @@ func FloatVal32(f float32) []byte {
 	buf[2] = byte(n >> 16)
 	buf[1] = byte(n >> 8)
 	buf[0] = byte(n)
-	return append([]byte{34, 5, 21}, buf...)
+	return buf[:]
 }
 
 func FloatVal64(f float64) []byte {
@@ -451,7 +340,7 @@ func FloatVal64(f float64) []byte {
 	buf[2] = byte(n >> 16)
 	buf[1] = byte(n >> 8)
 	buf[0] = byte(n)
-	return append([]byte{34, 9, 25}, buf...)
+	return buf[:]
 }
 
 func WriteValue(value interface{}) []byte {
@@ -459,16 +348,6 @@ func WriteValue(value interface{}) []byte {
 	kd := vv.Kind()
 
 	switch kd {
-	case reflect.String:
-		if len(vv.String()) > 0 {
-			size := uint64(len(vv.String()))
-			size_bytes := EncodeVarint(size)
-			bytevals := []byte{10}
-			bytevals = append(bytevals, size_bytes...)
-			bytevals = append(bytevals, []byte(vv.String())...)
-			bytevals = append(EncodeVarint(uint64(len(bytevals))), bytevals...)
-			return append([]byte{34}, bytevals...)
-		}
 	case reflect.Float32:
 		return FloatVal32(float32(vv.Float()))
 	case reflect.Float64:
@@ -479,11 +358,16 @@ func WriteValue(value interface{}) []byte {
 		return EncodeVarint_Value(uint64(vv.Uint()), 40)
 	case reflect.Bool:
 		if vv.Bool() == true {
-			return []byte{34, 2, 56, 1}
+			return []byte{1}
 		} else if vv.Bool() == false {
-			return []byte{34, 2, 56, 0}
+			return []byte{0}
 		}
 	}
 
 	return []byte{}
+}
+
+func writeUtf8(buf []byte, str []byte, pos int) int {
+	copy(buf[pos:], str)
+	return pos + len(str)
 }

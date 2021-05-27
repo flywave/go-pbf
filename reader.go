@@ -10,9 +10,7 @@ type Reader struct {
 	Length int
 }
 
-var powerfactor = math.Pow(10.0, 7.0)
-
-func (pbf *Reader) ReadKey() (TagType, WireType) {
+func (pbf *Reader) ReadTag() (TagType, WireType) {
 	var key byte
 	var val byte
 	if pbf.Pos > pbf.Length-1 {
@@ -24,8 +22,33 @@ func (pbf *Reader) ReadKey() (TagType, WireType) {
 	return TagType(key), WireType(val)
 }
 
-func (pbf *Reader) ReadVarint2() int {
+func (pbf *Reader) Reset() {
+	pbf.Pos = 0
+}
 
+func (pbf *Reader) ReadNext() (TagType, WireType) {
+	_, w := pbf.ReadTag()
+	pbf.skip(w)
+	return pbf.ReadTag()
+}
+
+func (pbf *Reader) skip(val WireType) {
+	if val == Varint {
+		for pbf.Pbf[pbf.Pos] > 0x7f {
+			pbf.Pos++
+		}
+	} else if val == Bytes {
+		pbf.Pos = pbf.ReadVarint() + pbf.Pos
+	} else if val == Fixed32 {
+		pbf.Pos += 4
+	} else if val == Fixed64 {
+		pbf.Pos += 8
+	} else {
+		panic("error")
+	}
+}
+
+func (pbf *Reader) ReadVarint2() int {
 	if pbf.Pos+1 >= pbf.Length {
 		if pbf.Pos+1 == pbf.Length {
 			pbf.Pos += 1
@@ -51,15 +74,6 @@ func (pbf *Reader) ReadSVarint() float64 {
 		return float64((num + 1) / -2)
 	} else {
 		return float64(num / 2)
-	}
-}
-
-func (pbf *Reader) ReadSVarintPower() float64 {
-	num := int(pbf.ReadVarint())
-	if num%2 == 1 {
-		return float64((num+1)/-2) / powerfactor
-	} else {
-		return float64(num/2) / powerfactor
 	}
 }
 
@@ -235,80 +249,6 @@ func (pbf *Reader) ReadPacked() []uint32 {
 	return vals[:currentpos]
 }
 
-func (pbf *Reader) ReadPoint(endpos int) []float64 {
-	for pbf.Pos < endpos {
-		x := pbf.ReadSVarintPower()
-		y := pbf.ReadSVarintPower()
-		return []float64{Round(x, .5, 7), Round(y, .5, 7)}
-	}
-	return []float64{}
-}
-
-func (pbf *Reader) ReadLine(num int, endpos int) [][]float64 {
-	var x, y float64
-	if num == 0 {
-
-		for startpos := pbf.Pos; startpos < endpos; startpos++ {
-			if pbf.Pbf[startpos] <= 127 {
-				num += 1
-			}
-		}
-		newlist := make([][]float64, num/2)
-
-		for i := 0; i < num/2; i++ {
-			x += pbf.ReadSVarintPower()
-			y += pbf.ReadSVarintPower()
-			newlist[i] = []float64{Round(x, .5, 7), Round(y, .5, 7)}
-		}
-
-		return newlist
-	} else {
-		newlist := make([][]float64, num/2)
-
-		for i := 0; i < num/2; i++ {
-			x += pbf.ReadSVarintPower()
-			y += pbf.ReadSVarintPower()
-
-			newlist[i] = []float64{Round(x, .5, 7), Round(y, .5, 7)}
-
-		}
-		return newlist
-	}
-}
-
-func (pbf *Reader) ReadPolygon(endpos int) [][][]float64 {
-	polygon := [][][]float64{}
-	for pbf.Pos < endpos {
-		num := pbf.ReadVarint()
-		polygon = append(polygon, pbf.ReadLine(num, endpos))
-	}
-	return polygon
-}
-
-func (pbf *Reader) ReadMultiPolygon(endpos int) [][][][]float64 {
-	multipolygon := [][][][]float64{}
-	for pbf.Pos < endpos {
-		num_rings := pbf.ReadVarint()
-		polygon := make([][][]float64, num_rings)
-		for i := 0; i < num_rings; i++ {
-			num := pbf.ReadVarint()
-			polygon[i] = pbf.ReadLine(num, endpos)
-		}
-		multipolygon = append(multipolygon, polygon)
-	}
-	return multipolygon
-}
-
-func (pbf *Reader) ReadBoundingBox() []float64 {
-	bb := make([]float64, 4)
-	pbf.ReadVarint()
-	bb[0] = float64(pbf.ReadSVarintPower())
-	bb[1] = float64(pbf.ReadSVarintPower())
-	bb[2] = float64(pbf.ReadSVarintPower())
-	bb[3] = float64(pbf.ReadSVarintPower())
-	return bb
-}
-
 func (pbf *Reader) ReadPackedInt32() []int32 {
 	size := pbf.ReadVarint()
 	arr := []int32{}
@@ -321,52 +261,25 @@ func (pbf *Reader) ReadPackedInt32() []int32 {
 	return arr
 }
 
-func (pbf *Reader) ReadPackedUInt64() []int {
+func (pbf *Reader) ReadPackedInt64() []int64 {
 	size := pbf.ReadVarint()
-	arr := []int{}
+	arr := []int64{}
 	endpos := pbf.Pos + size
 
 	for pbf.Pos < endpos {
-		arr = append(arr, pbf.ReadVarint())
+		arr = append(arr, int64(pbf.ReadVarint()))
 	}
 
 	return arr
 }
 
-func NewReader(bytevals []byte) *Reader {
-	return &Reader{Pbf: bytevals, Length: len(bytevals)}
-}
-
-func (pbf *Reader) ReadPackedUInt32_3() []uint32 {
+func (pbf *Reader) ReadPackedUInt64() []uint64 {
 	size := pbf.ReadVarint()
-	endpos := pbf.Pos + size
-
-	count := 0
-	for startpos := pbf.Pos; startpos < endpos; startpos++ {
-		if pbf.Pbf[startpos] <= 127 {
-			count += 1
-		}
-
-	}
-
-	arr := make([]uint32, count)
-
-	for pos := 0; pbf.Pos < endpos; pos++ {
-		arr[pos] = pbf.ReadUInt32()
-	}
-
-	return arr
-}
-
-func (pbf *Reader) ReadPackedUInt32_2() []uint32 {
-	size := pbf.ReadVarint()
-
-	arr := []uint32{}
+	arr := []uint64{}
 	endpos := pbf.Pos + size
 
 	for pbf.Pos < endpos {
-		arr = append(arr, pbf.ReadUInt32())
-
+		arr = append(arr, uint64(pbf.ReadVarint()))
 	}
 
 	return arr
@@ -383,4 +296,112 @@ func (pbf *Reader) ReadPackedUInt32() []uint32 {
 		i++
 	}
 	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedFloat() []float32 {
+	size := pbf.ReadVarint()
+
+	arr := make([]float32, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadFloat()
+		i++
+	}
+	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedDouble() []float64 {
+	size := pbf.ReadVarint()
+
+	arr := make([]float64, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadDouble()
+		i++
+	}
+	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedBool() []bool {
+	size := pbf.ReadVarint()
+
+	arr := make([]bool, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadBool()
+		i++
+	}
+	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedFixed32() []uint32 {
+	size := pbf.ReadVarint()
+
+	arr := make([]uint32, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadFixed32()
+		i++
+	}
+	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedSFixed32() []int32 {
+	size := pbf.ReadVarint()
+
+	arr := make([]int32, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadSFixed32()
+		i++
+	}
+	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedFixed64() []uint64 {
+	size := pbf.ReadVarint()
+
+	arr := make([]uint64, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadFixed64()
+		i++
+	}
+	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedSFixed64() []int64 {
+	size := pbf.ReadVarint()
+
+	arr := make([]int64, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadSFixed64()
+		i++
+	}
+	return arr[:i]
+}
+
+func (pbf *Reader) ReadPackedVarint() []int {
+	size := pbf.ReadVarint()
+
+	arr := make([]int, size)
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr[i] = pbf.ReadVarint()
+		i++
+	}
+	return arr[:i]
+}
+
+func NewReader(bytevals []byte) *Reader {
+	return &Reader{Pbf: bytevals, Length: len(bytevals)}
 }

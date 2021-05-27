@@ -89,36 +89,12 @@ func TestReadUInt32_Pbf(t *testing.T) {
 }
 
 // benchamrks every new vector tile
-func Benchmark_ReadPackedUInt32_New(b *testing.B) {
-	b.ReportAllocs()
-
-	// run the Fib function b.N times
-	for n := 0; n < b.N; n++ {
-		pbfval.ReadPackedUInt32_2()
-		pbfval.Pos = 0
-
-	}
-}
-
-// benchamrks every new vector tile
 func Benchmark_ReadPackedUInt32_Newer(b *testing.B) {
 	b.ReportAllocs()
 
 	// run the Fib function b.N times
 	for n := 0; n < b.N; n++ {
 		pbfval.ReadPackedUInt32()
-		pbfval.Pos = 0
-
-	}
-}
-
-// benchamrks every new vector tile
-func Benchmark_ReadPackedUInt32_Newer2(b *testing.B) {
-	b.ReportAllocs()
-
-	// run the Fib function b.N times
-	for n := 0; n < b.N; n++ {
-		pbfval.ReadPackedUInt32_3()
 		pbfval.Pos = 0
 
 	}
