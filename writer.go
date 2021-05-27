@@ -127,6 +127,11 @@ func (pbf *Writer) writeValue(v interface{}) {
 	pbf.Pos += n
 }
 
+func (pbf *Writer) WriteValue(tag TagType, v interface{}) {
+	pbf.WriteTag(tag, Varint)
+	pbf.writeValue(v)
+}
+
 func (pbf *Writer) WriteUInt32(tag TagType, v uint32) {
 	pbf.WriteTag(tag, Varint)
 	pbf.writeValue(v)
