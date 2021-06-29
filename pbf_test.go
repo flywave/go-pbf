@@ -35,7 +35,6 @@ func TestReadInt32(t *testing.T) {
 
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint32(b, uint32(expected))
-	//b = b[:n]
 	val := int32(ReadInt32(b[:2]))
 
 	if val != expected {
@@ -48,7 +47,6 @@ func TestReadUInt32(t *testing.T) {
 
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint32(b, uint32(expected))
-	//b = b[:n]
 	val := uint32(ReadUInt32(b[:2]))
 
 	if val != expected {
@@ -61,7 +59,6 @@ func TestReadInt32_Pbf(t *testing.T) {
 
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint32(b, uint32(expected))
-	//b = b[:n]
 	b = append(b, []byte{2, 4}...)
 	pbfval := &Reader{Pbf: b, Length: len(b)}
 
@@ -77,7 +74,6 @@ func TestReadUInt32_Pbf(t *testing.T) {
 
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint32(b, uint32(expected))
-	//b = b[:n]
 	b = append(b, []byte{2, 4}...)
 	pbfval := &Reader{Pbf: b, Length: len(b)}
 
@@ -88,11 +84,9 @@ func TestReadUInt32_Pbf(t *testing.T) {
 	}
 }
 
-// benchamrks every new vector tile
 func Benchmark_ReadPackedUInt32_Newer(b *testing.B) {
 	b.ReportAllocs()
 
-	// run the Fib function b.N times
 	for n := 0; n < b.N; n++ {
 		pbfval.ReadPackedUInt32()
 		pbfval.Pos = 0
