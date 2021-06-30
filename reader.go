@@ -48,6 +48,27 @@ func (pbf *Reader) skip(val WireType) {
 	}
 }
 
+func (pbf *Reader) ReadFields(readField func(tag TagType, tp WireType, result interface{}, pbf *Reader), result interface{}, endpos int) interface{} {
+	if endpos <= 0 {
+		endpos = pbf.Length
+	}
+	for pbf.Pos < endpos {
+		tag, val := pbf.ReadTag()
+		startPos := pbf.Pos
+
+		readField(tag, val, result, pbf)
+
+		if pbf.Pos == startPos {
+			pbf.skip(val)
+		}
+	}
+	return result
+}
+
+func (pbf *Reader) ReadMessage(readField func(tag TagType, tp WireType, result interface{}, pbf *Reader), result interface{}) interface{} {
+	return pbf.ReadFields(readField, result, pbf.ReadVarint()+pbf.Pos)
+}
+
 func (pbf *Reader) ReadVarint2() int {
 	if pbf.Pos+1 >= pbf.Length {
 		if pbf.Pos+1 == pbf.Length {
