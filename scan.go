@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-type ProtobufScanner struct {
+type Scanner struct {
 	Scanner        *bufio.Scanner
 	BoolVal        bool
 	EndBool        bool
@@ -18,11 +18,11 @@ type ProtobufScanner struct {
 var SizeBuffer = 64 * 1028
 var SizeBufferLarge = 64 * 1028 * 1028
 
-func NewProtobufScanner(ioreader io.Reader) *ProtobufScanner {
+func NewScanner(ioreader io.Reader) *Scanner {
 	scanner := bufio.NewScanner(ioreader)
 	buf := make([]byte, SizeBuffer)
 	scanner.Buffer(buf, SizeBuffer)
-	scannerval := &ProtobufScanner{Scanner: scanner, BoolVal: true, SizeBuffer: SizeBuffer}
+	scannerval := &Scanner{Scanner: scanner, BoolVal: true, SizeBuffer: SizeBuffer}
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 		if len(data) < scannerval.increment {
 			token = make([]byte, scannerval.increment)
@@ -43,11 +43,11 @@ func NewProtobufScanner(ioreader io.Reader) *ProtobufScanner {
 	return scannerval
 }
 
-func NewProtobufScannerSize(ioreader io.Reader, size_buffer int) *ProtobufScanner {
+func NewScannerSize(ioreader io.Reader, size_buffer int) *Scanner {
 	scanner := bufio.NewScanner(ioreader)
 	buf := make([]byte, size_buffer)
 	scanner.Buffer(buf, size_buffer)
-	scannerval := &ProtobufScanner{Scanner: scanner, BoolVal: true, SizeBuffer: size_buffer}
+	scannerval := &Scanner{Scanner: scanner, BoolVal: true, SizeBuffer: size_buffer}
 	split := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 		if len(data) < scannerval.increment {
 			token = make([]byte, scannerval.increment)
@@ -68,7 +68,7 @@ func NewProtobufScannerSize(ioreader io.Reader, size_buffer int) *ProtobufScanne
 	return scannerval
 }
 
-func (scanner *ProtobufScanner) Reset() {
+func (scanner *Scanner) Reset() {
 	scanner.increment = 0
 	scanner.BoolVal = true
 	scanner.EndBool = false
@@ -76,7 +76,7 @@ func (scanner *ProtobufScanner) Reset() {
 	scanner.BufferPosition = 0
 }
 
-func (scanner *ProtobufScanner) Scan() bool {
+func (scanner *Scanner) Scan() bool {
 	scanner.GetIncrement(0)
 	if scanner.EndBool {
 		return false
@@ -84,7 +84,7 @@ func (scanner *ProtobufScanner) Scan() bool {
 	return scanner.BoolVal
 }
 
-func (scanner *ProtobufScanner) GetIncrement(step int) []byte {
+func (scanner *Scanner) GetIncrement(step int) []byte {
 	scanner.TotalPosition += step
 
 	buffer_left := scanner.SizeBuffer - scanner.BufferPosition
@@ -137,7 +137,7 @@ func (scanner *ProtobufScanner) GetIncrement(step int) []byte {
 	}
 }
 
-func (scanner *ProtobufScanner) Protobuf() []byte {
+func (scanner *Scanner) Protobuf() []byte {
 	size := scanner.GetIncrement(1)
 	size = scanner.GetIncrement(1)
 	size_bytes := []byte{size[0]}
@@ -149,7 +149,7 @@ func (scanner *ProtobufScanner) Protobuf() []byte {
 	return scanner.GetIncrement(size_protobuf)
 }
 
-func (scanner *ProtobufScanner) ProtobufIndicies() ([]byte, [2]int) {
+func (scanner *Scanner) ProtobufIndicies() ([]byte, [2]int) {
 	size := scanner.GetIncrement(1)
 	size = scanner.GetIncrement(1)
 	size_bytes := []byte{size[0]}
