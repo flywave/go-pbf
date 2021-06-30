@@ -237,6 +237,10 @@ func (pbf *Writer) writeMessage(tag TagType, fn func(w *Writer)) {
 	pbf.writeRawMessage(fn)
 }
 
+func (pbf *Writer) WriteMessage(tag TagType, fn func(w *Writer)) {
+	pbf.writeMessage(tag, fn)
+}
+
 func (pbf *Writer) WritePackedVarint(tag TagType, p []int) {
 	pbf.WriteTag(tag, Bytes)
 	pbf.writeRawMessage(func(w *Writer) {
