@@ -57,10 +57,10 @@ func (pbf *Writer) realloc(min int) int {
 		return 0
 	}
 
-	buf := make([]byte, length)
+	buf := make([]byte, pbf.Length+min, length)
 	copy(buf, pbf.Pbf[:pbf.Pos])
 	pbf.Pbf = buf[:pbf.Pos+min]
-	pbf.Length = length
+	pbf.Length += min
 	return pbf.Pos
 }
 
@@ -185,13 +185,15 @@ func (pbf *Writer) makeRoomForExtraLength(startPos int, len int) {
 	}
 
 	pbf.realloc(extraLen)
+
 	for i := pbf.Pos - 1; i >= startPos; i-- {
 		pbf.Pbf[i+extraLen] = pbf.Pbf[i]
 	}
+	pbf.Pos += extraLen
 }
 
 func (pbf *Writer) writeString(s string) {
-	pbf.realloc(len(s) * 4)
+	pbf.realloc(len(s) + 1)
 
 	pbf.Pos++
 

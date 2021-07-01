@@ -188,3 +188,29 @@ func TestWriteString(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+var testStr = []string{"rsasasaaaaaaaaaaaaaaaaaaaaaaadfdwfewfeffffffffffffffffffffffffffffffffffffffffffffffffffffvervberwvbeqvbeqb rsasasaaaaaaaaaaaaaaaaaaaaaaadfdwfewfeffffffffffffffffffffffffffffffffffffffffffffffffffffvervberwvbeqvbeqbrsasasaaaaaaaaaaaaaaaaaaaaaaadfdwfewfeffffffffffffffffffffffffffffffffffffffffffffffffffffvervberwvbeqvbeqbrsasasaaaaaaaaaaaaaaaaaaaaaaadfdwfewfeffffffffffffffffffffffffffffffffffffffffffffffffffffvervberwvbeqvbeqbrsasasaaaaaaaaaaaaaaaaaaaaaaadfdwfewfeffffffffffffffffffffffffffffffffffffffffffffffffffffvervberwvbeqvbeqbrsasasaaaaaaaaaaaaaaaaaaaaaaadfdwfewfeffffffffffffffffffffffffffffffffffffffffffffffffffffvervberwvbeqvbeqbrsasasaaaaaaaaaaaaaaaaaaaaaaadfdwfewfeffffffffffffffffffffffffffffffffffffffffffffffffffffvervberwvbeqvbeqbe	vbrbvvrffevf", "33df", "assfrfgtbvgt", "cvebvtgrbgberbfg", "cdevvefvevrev", "dcvff", "vbrbvvrffevf"}
+
+func TestWriteStrings(t *testing.T) {
+	w := NewWriter()
+
+	for _, str := range testStr {
+		w.WriteString(TagType(1), str)
+	}
+
+	buf := w.Finish()
+
+	reader := NewReader(buf)
+
+	for _, str := range testStr {
+		tag, v := reader.ReadTag()
+		if tag != TagType(1) || v != Bytes {
+			t.FailNow()
+		}
+		ty := reader.ReadString()
+
+		if ty != str {
+			t.FailNow()
+		}
+	}
+}
