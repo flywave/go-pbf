@@ -234,6 +234,23 @@ func (pbf *Writer) writeRawMessage(fn func(w *Writer)) {
 	copy(pbf.Pbf[i:], buf)
 }
 
+func (pbf *Writer) writeTypeMessage(fn func(w *Writer) int) {
+	pbf.realloc(1)
+	pbf.Pos++
+
+	startPos := pbf.Pos
+
+	l := fn(pbf)
+
+	if l >= 0x80 {
+		pbf.makeRoomForExtraLength(startPos, l)
+	}
+
+	buf := WriteValue(l)
+	i := startPos - 1
+	copy(pbf.Pbf[i:], buf)
+}
+
 func (pbf *Writer) writeMessage(tag TagType, fn func(w *Writer)) {
 	pbf.WriteTag(tag, Bytes)
 	pbf.writeRawMessage(fn)
@@ -245,73 +262,81 @@ func (pbf *Writer) WriteMessage(tag TagType, fn func(w *Writer)) {
 
 func (pbf *Writer) WritePackedVarint(tag TagType, p []int) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
 func (pbf *Writer) WritePackedBoolean(tag TagType, p []bool) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
 func (pbf *Writer) WritePackedUInt32(tag TagType, p []uint32) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
 func (pbf *Writer) WritePackedInt32(tag TagType, p []int32) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
 func (pbf *Writer) WritePackedUInt64(tag TagType, p []uint64) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
 func (pbf *Writer) WritePackedInt64(tag TagType, p []int64) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
 func (pbf *Writer) WritePackedDouble(tag TagType, p []float64) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
 func (pbf *Writer) WritePackedFloat(tag TagType, p []float32) {
 	pbf.WriteTag(tag, Bytes)
-	pbf.writeRawMessage(func(w *Writer) {
+	pbf.writeTypeMessage(func(w *Writer) int {
 		for i := range p {
 			pbf.writeValue(p[i])
 		}
+		return len(p)
 	})
 }
 
