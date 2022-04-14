@@ -155,47 +155,6 @@ done:
 	return x
 }
 
-func Key(x byte) (byte, byte) {
-	val := x >> 3
-
-	if int(x) >= 8 {
-		x = x & 0x07
-
-	} else {
-		return val, x
-	}
-
-	if int(x) >= 16 {
-		x = x & 0x0f
-
-	} else {
-		return val, x
-	}
-
-	if int(x) >= 32 {
-		x = x & 0x1f
-
-	} else {
-		return val, x
-	}
-
-	if int(x) >= 64 {
-		x = x & 0x3f
-
-	} else {
-		return val, x
-	}
-
-	if int(x) >= 128 {
-		x = x & 0x7f
-
-	} else {
-		return val, x
-	}
-
-	return val, x
-}
-
 func ReadUInt32(buf []byte) uint32 {
 	val := len(buf)
 	switch val {
