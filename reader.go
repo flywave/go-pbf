@@ -272,12 +272,12 @@ func (pbf *Reader) ReadPacked() []uint32 {
 
 func (pbf *Reader) ReadPackedInt32() []int32 {
 	size := pbf.ReadVarint()
-	arr := make([]int32, size)
+	arr := []int32{}
 	endpos := pbf.Pos + size
 
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = int32(pbf.ReadUInt32())
+		arr = append(arr, int32(pbf.ReadUInt32()))
 		i++
 	}
 
@@ -286,12 +286,12 @@ func (pbf *Reader) ReadPackedInt32() []int32 {
 
 func (pbf *Reader) ReadPackedInt64() []int64 {
 	size := pbf.ReadVarint()
-	arr := make([]int64, size)
+	arr := []int64{}
 
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = int64(pbf.ReadVarint())
+		arr = append(arr, int64(pbf.ReadVarint()))
 		i++
 	}
 
@@ -300,12 +300,12 @@ func (pbf *Reader) ReadPackedInt64() []int64 {
 
 func (pbf *Reader) ReadPackedUInt64() []uint64 {
 	size := pbf.ReadVarint()
-	arr := make([]uint64, size)
+	arr := []uint64{}
 
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = uint64(pbf.ReadVarint())
+		arr = append(arr, uint64(pbf.ReadVarint()))
 		i++
 	}
 	return arr[:i]
@@ -314,11 +314,11 @@ func (pbf *Reader) ReadPackedUInt64() []uint64 {
 func (pbf *Reader) ReadPackedUInt32() []uint32 {
 	size := pbf.ReadVarint()
 
-	arr := make([]uint32, size)
+	arr := []uint32{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = uint32(pbf.ReadVarint())
+		arr = append(arr, uint32(pbf.ReadVarint()))
 		i++
 	}
 	return arr[:i]
@@ -327,11 +327,11 @@ func (pbf *Reader) ReadPackedUInt32() []uint32 {
 func (pbf *Reader) ReadPackedFloat() []float32 {
 	size := pbf.ReadVarint()
 
-	arr := make([]float32, size)
+	arr := []float32{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadFloat()
+		arr = append(arr, pbf.ReadFloat())
 		i++
 	}
 	return arr[:i]
@@ -340,11 +340,11 @@ func (pbf *Reader) ReadPackedFloat() []float32 {
 func (pbf *Reader) ReadPackedDouble() []float64 {
 	size := pbf.ReadVarint()
 
-	arr := make([]float64, size)
+	arr := []float64{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadDouble()
+		arr = append(arr, pbf.ReadDouble())
 		i++
 	}
 	return arr[:i]
@@ -353,11 +353,11 @@ func (pbf *Reader) ReadPackedDouble() []float64 {
 func (pbf *Reader) ReadPackedBool() []bool {
 	size := pbf.ReadVarint()
 
-	arr := make([]bool, size)
+	arr := []bool{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadBool()
+		arr = append(arr, pbf.ReadBool())
 		i++
 	}
 	return arr[:i]
@@ -366,11 +366,11 @@ func (pbf *Reader) ReadPackedBool() []bool {
 func (pbf *Reader) ReadPackedFixed32() []uint32 {
 	size := pbf.ReadVarint()
 
-	arr := make([]uint32, size)
+	arr := []uint32{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadFixed32()
+		arr = append(arr, pbf.ReadFixed32())
 		i++
 	}
 	return arr[:i]
@@ -379,11 +379,11 @@ func (pbf *Reader) ReadPackedFixed32() []uint32 {
 func (pbf *Reader) ReadPackedSFixed32() []int32 {
 	size := pbf.ReadVarint()
 
-	arr := make([]int32, size)
+	arr := []int32{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadSFixed32()
+		arr = append(arr, pbf.ReadSFixed32())
 		i++
 	}
 	return arr[:i]
@@ -392,11 +392,11 @@ func (pbf *Reader) ReadPackedSFixed32() []int32 {
 func (pbf *Reader) ReadPackedFixed64() []uint64 {
 	size := pbf.ReadVarint()
 
-	arr := make([]uint64, size)
+	arr := []uint64{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadFixed64()
+		arr = append(arr, pbf.ReadFixed64())
 		i++
 	}
 	return arr[:i]
@@ -405,11 +405,11 @@ func (pbf *Reader) ReadPackedFixed64() []uint64 {
 func (pbf *Reader) ReadPackedSFixed64() []int64 {
 	size := pbf.ReadVarint()
 
-	arr := make([]int64, size)
+	arr := []int64{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadSFixed64()
+		arr = append(arr, pbf.ReadSFixed64())
 		i++
 	}
 	return arr[:i]
@@ -418,11 +418,11 @@ func (pbf *Reader) ReadPackedSFixed64() []int64 {
 func (pbf *Reader) ReadPackedVarint() []int {
 	size := pbf.ReadVarint()
 
-	arr := make([]int, size)
+	arr := []int{}
 	endpos := pbf.Pos + size
 	i := 0
 	for pbf.Pos < endpos {
-		arr[i] = pbf.ReadVarint()
+		arr = append(arr, pbf.ReadVarint())
 		i++
 	}
 	return arr[:i]
