@@ -11,15 +11,10 @@ type Reader struct {
 }
 
 func (pbf *Reader) ReadTag() (TagType, WireType) {
-	var key byte
-	var val byte
-	if pbf.Pos > pbf.Length-1 {
-		key, val = 100, 100
-	} else {
-		key, val = Key(pbf.Pbf[pbf.Pos])
-		pbf.Pos += 1
-	}
-	return TagType(key), WireType(val)
+	val := pbf.ReadVarint()
+	key := val & 0x7
+	tag := val >> 3
+	return TagType(tag), WireType(key)
 }
 
 func (pbf *Reader) Reset() {
