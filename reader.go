@@ -425,6 +425,19 @@ func (pbf *Reader) ReadPackedVarint() []int {
 	return arr[:i]
 }
 
+func (pbf *Reader) ReadPackedString() []string {
+	size := pbf.ReadVarint()
+
+	arr := []string{}
+	endpos := pbf.Pos + size
+	i := 0
+	for pbf.Pos < endpos {
+		arr = append(arr, pbf.ReadString())
+		i++
+	}
+	return arr[:i]
+}
+
 func NewReader(bytevals []byte) *Reader {
 	return &Reader{Pbf: bytevals, Length: len(bytevals)}
 }

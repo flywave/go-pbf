@@ -315,6 +315,15 @@ func (pbf *Writer) WritePackedFloat(tag TagType, p []float32) {
 	})
 }
 
+func (pbf *Writer) WritePackedString(tag TagType, p []string) {
+	pbf.WriteTag(tag, Bytes)
+	pbf.writeRawMessage(func(w *Writer) {
+		for i := range p {
+			pbf.writeString(p[i])
+		}
+	})
+}
+
 func (pbf *Writer) WriteRaw(buf []byte) {
 	n := len(buf)
 	i := pbf.realloc(n)
